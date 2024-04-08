@@ -63,10 +63,11 @@ In caso contrario si può usare Visual Studio Code con relativa estensione per l
 
 1. Creare la cartella all'interno del progetto
 2. spostarsi all'interno della cartella
-3. Inizializzare il nuovo modulo (per esempio il modulo "commission") con:
+3. Inizializzare il nuovo modulo con:
 
     ```bash
-    go mod init bitbucket.org/m_arnone/gogeco/commission
+    go mod init simple-queue-writer
+    go mod tidy
     ```
 
 ## Installazione dipendenze

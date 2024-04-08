@@ -5,6 +5,7 @@
 .idea/
 
 */vendor
-*/bin
+bin
+logs.txt
 
 package-lock.json

@@ -7,7 +7,7 @@ format:
 	@go fmt ./...
 
 tidy:
-	@GOPRIVATE=bitbucket.org/m_arnone/gogeco go mod tidy
+	@GOPRIVATE=/simple-queue-writer go mod tidy
 
 download:
 	@go mod download
