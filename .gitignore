@@ -1,0 +1,10 @@
+# Log files
+*.log
+
+# JetBrains IDE
+.idea/
+
+*/vendor
+*/bin
+
+package-lock.json
