@@ -10,13 +10,14 @@ import (
 	"simple-queue-writer/internal/util"
 
 	"github.com/gin-gonic/gin"
+
+	"golang.org/x/exp/maps"
 )
 
 var (
-	KO_RES      = gin.H{"status": "KO"}
-	OK_RES      = gin.H{"status": "OK"}
-	ErrBadParam = errors.New("bad_parameter")
-	ErrSvc      = errors.New("service_error")
+	KO_RES = gin.H{"status": "KO"}
+	OK_RES = gin.H{"status": "OK"}
+	ErrSvc = errors.New("service_error")
 )
 
 type EmailRequestBody struct {
@@ -61,19 +62,15 @@ func route(l *util.Logger, svc *internal.Service) {
 			return
 		}
 
-		isValid := util.IsEmailValid(requestBody.Email)
-		if !isValid {
-			l.ErrorLogger.Printf("Invalid eMail: %s", requestBody.Email)
-			c.JSON(http.StatusBadRequest, fmt.Errorf("%v: %w", err, ErrBadParam))
-			return
-		}
-
 		err = svc.SendToQueue(requestBody.Email)
 		if err != nil {
-			l.ErrorLogger.Println(err.Error())
-			c.JSON(http.StatusInternalServerError, KO_RES)
+			errMap := map[string]any{
+				"error": err.Error(),
+			}
+			maps.Copy(errMap, KO_RES)
+			l.ErrorLogger.Println(errMap)
+			c.JSON(http.StatusInternalServerError, errMap)
 		} else {
-			l.InfoLogger.Println("Successfully sent!")
 			c.JSON(http.StatusAccepted, OK_RES)
 		}
 	})

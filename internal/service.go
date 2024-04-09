@@ -1,12 +1,17 @@
 package internal
 
 import (
+	"errors"
 	"simple-queue-writer/internal/config"
 	"simple-queue-writer/internal/util"
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/session"
 	"github.com/aws/aws-sdk-go/service/sqs"
+)
+
+var (
+	ErrBadParam = errors.New("bad_parameter")
 )
 
 type Servicer interface {
@@ -27,7 +32,15 @@ func NewService(l *util.Logger, cfg *config.Config) (*Service, error) {
 
 func (s *Service) SendToQueue(email string) error {
 
-	sess := session.Must(session.NewSession())
+	isValid := util.IsEmailValid(email)
+	if !isValid {
+		s.l.ErrorLogger.Printf("Invalid eMail: %s", email)
+		return ErrBadParam
+	}
+
+	sess := session.Must(session.NewSession(&aws.Config{
+		Region: aws.String(s.cfg.AWS.Region),
+	}))
 	sqsClient := sqs.New(sess)
 
 	result, err := sqsClient.SendMessage(&sqs.SendMessageInput{

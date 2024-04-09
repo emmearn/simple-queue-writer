@@ -9,23 +9,22 @@ import (
 )
 
 type Config struct {
-	Server Server
+	Server Server `yaml:"server"`
 	AWS    AWS
 }
 
 type Server struct {
-	Port string `yaml:"server_port"`
+	Port string `yaml:"port"`
 }
 
 type AWS struct {
-	Stage  string `yaml:"STAGE,required"`
-	Region string `yaml:"REGION,required"`
-	SQS    SQS
+	Region string `yaml:"region"`
+	SQS    SQS    `yaml:"sqs"`
 }
 
 type SQS struct {
-	QueueName string `yaml:"AWS_SQS_QUEUE_NAME,required"`
-	QueueURL  string `yaml:"AWS_SQS_QUEUE_URL,required"`
+	QueueName string `yaml:"queue_name"`
+	QueueURL  string `yaml:"queue_url"`
 }
 
 var (
@@ -34,15 +33,14 @@ var (
 )
 
 func ConfigLoad() (*Config, error) {
-	f, err := os.Open("application.yml")
+	var cfg Config
+
+	yamlFile, err := os.ReadFile("application.yml")
 	if err != nil {
 		return nil, fmt.Errorf("%v: %w", err, ErrInvalidEnv)
 	}
-	defer f.Close()
 
-	var cfg Config
-	decoder := yaml.NewDecoder(f)
-	err = decoder.Decode(&cfg)
+	err = yaml.Unmarshal(yamlFile, &cfg)
 	if err != nil {
 		return nil, fmt.Errorf("%v: %w", err, ErrConfig)
 	}

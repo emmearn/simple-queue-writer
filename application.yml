@@ -1,10 +1,12 @@
 service: simple-queue-writer
 
 # ------------------ APP SETTINGS------------------- #
-server_port: 8080
+server:
+  port: 8080
 
 # ------------------ AWS SETTINGS------------------- #
-STAGE:
-REGION:
-AWS_SQS_QUEUE_NAME:
-AWS_SQS_QUEUE_URL: https://sqs.eu-central-1.amazonaws.com/891377221874/test
+aws:
+  region: eu-central-1
+  sqs:
+    queue_name: myTestQueue
+    queue_url: https://sqs.eu-central-1.amazonaws.com/891377221874/myTestQueue
