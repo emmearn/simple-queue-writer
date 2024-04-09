@@ -25,12 +25,12 @@ type EmailRequestBody struct {
 }
 
 func main() {
-	l, svc := new()
+	l, cfg, svc := new()
 
-	route(l, svc)
+	route(l, cfg, svc)
 }
 
-func new() (*util.Logger, *internal.Service) {
+func new() (*util.Logger, *config.Config, *internal.Service) {
 	cfg, err := config.ConfigLoad()
 	if err != nil {
 		log.Fatal(err)
@@ -46,10 +46,10 @@ func new() (*util.Logger, *internal.Service) {
 		log.Fatal(fmt.Errorf("%v: %w", err, ErrSvc))
 	}
 
-	return l, svc
+	return l, cfg, svc
 }
 
-func route(l *util.Logger, svc *internal.Service) {
+func route(l *util.Logger, cfg *config.Config, svc *internal.Service) {
 	router := gin.Default()
 
 	router.POST("/email", func(c *gin.Context) {
@@ -64,16 +64,19 @@ func route(l *util.Logger, svc *internal.Service) {
 
 		err = svc.SendToQueue(requestBody.Email)
 		if err != nil {
-			errMap := map[string]any{
-				"error": err.Error(),
+			if errors.Is(err, internal.ErrBadParam) {
+				errMap := map[string]any{
+					"error": err.Error(),
+				}
+				maps.Copy(errMap, KO_RES)
+				c.JSON(http.StatusBadRequest, errMap)
+			} else {
+				c.JSON(http.StatusInternalServerError, KO_RES)
 			}
-			maps.Copy(errMap, KO_RES)
-			l.ErrorLogger.Println(errMap)
-			c.JSON(http.StatusInternalServerError, errMap)
 		} else {
-			c.JSON(http.StatusAccepted, OK_RES)
+			c.JSON(http.StatusOK, OK_RES)
 		}
 	})
 
-	router.Run()
+	router.Run(":" + cfg.Server.Port)
 }
