@@ -19,7 +19,17 @@ var (
 	ErrSvc      = errors.New("service_error")
 )
 
+type EmailRequestBody struct {
+	Email string
+}
+
 func main() {
+	l, svc := new()
+
+	route(l, svc)
+}
+
+func new() (*util.Logger, *internal.Service) {
 	cfg, err := config.ConfigLoad()
 	if err != nil {
 		log.Fatal(err)
@@ -35,24 +45,30 @@ func main() {
 		log.Fatal(fmt.Errorf("%v: %w", err, ErrSvc))
 	}
 
+	return l, svc
+}
+
+func route(l *util.Logger, svc *internal.Service) {
 	router := gin.Default()
 
 	router.POST("/email", func(c *gin.Context) {
-		var email string
+		var requestBody EmailRequestBody
 
-		err := c.BindJSON(&email)
+		err := c.BindJSON(&requestBody)
 		if err != nil {
-			l.ErrorLogger.Println(err.Error())
+			l.ErrorLogger.Println(err)
 			c.JSON(http.StatusBadRequest, KO_RES)
+			return
 		}
 
-		isValid := util.IsEmailValid(email)
+		isValid := util.IsEmailValid(requestBody.Email)
 		if !isValid {
-			l.ErrorLogger.Println("Invalid eMail!")
+			l.ErrorLogger.Printf("Invalid eMail: %s", requestBody.Email)
 			c.JSON(http.StatusBadRequest, fmt.Errorf("%v: %w", err, ErrBadParam))
+			return
 		}
 
-		err = svc.SendToQueue(email)
+		err = svc.SendToQueue(requestBody.Email)
 		if err != nil {
 			l.ErrorLogger.Println(err.Error())
 			c.JSON(http.StatusInternalServerError, KO_RES)
@@ -63,5 +79,4 @@ func main() {
 	})
 
 	router.Run()
-	// router.Run("localhost:" + cfg.Server.Port)
 }
